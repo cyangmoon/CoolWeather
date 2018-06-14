@@ -1,0 +1,9 @@
+<litepal>
+    <dbname value="cool_weather"/>
+    <version value="1"/>
+    <list>
+        <map class="com.ismael.weather.db.City"/>
+        <map class="com.ismael.weather.db.County"/>
+        <map class="com.ismael.weather.db.Province"/>
+    </list>
+</litepal>

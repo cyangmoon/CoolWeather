@@ -19,16 +19,19 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:27.1.1'
     implementation 'com.android.support.constraint:constraint-layout:1.1.2'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-
-    implementation 'org.litepal.android:core:1.6.1' //操作数据库
-    implementation 'com.squareup.okhttp3:okhttp:3.7.0'  //网络请求
-    implementation 'com.google.code.gson:gson:2.8.0'    //解析json数据
-    implementation 'com.github.bumptech.glide:glide:3.7.0'  //界面展示图片
-
+    implementation 'org.litepal.android:core:1.6.1'
+    //操作数据库
+    implementation 'com.squareup.okhttp3:okhttp:3.7.0'
+    //网络请求
+    implementation 'com.google.code.gson:gson:2.8.0'
+    //解析json数据
+    implementation 'com.github.bumptech.glide:glide:3.7.0'
+    //界面展示图片
+    implementation files('libs/jsoup-1.11.3.jar')
 }

@@ -113,17 +113,23 @@ public class ChooseAreaFragment extends Fragment {
                 public void run() {
                     queryFromServer("https://www.cnblogs.com/oucbl/p/6138963.html",new NetListener(){
                         @Override
-                        public void finishLoad() {
-                            ((Activity) Objects.requireNonNull(getContext())).runOnUiThread(new Runnable(){
+                        public void startLoad() {
+                            ((Activity)getContext()).runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    queryProvinces();
+                                    showProgressDialog();
                                 }
                             });
                         }
                         @Override
-                        public void startLoad() {
-                  //        showProgressDialog();
+                        public void finishLoad() {
+                            ((Activity) Objects.requireNonNull(getContext())).runOnUiThread(new Runnable(){
+                                @Override
+                                public void run() {
+                                    closeProgressDialog();
+                                    queryProvinces();
+                                }
+                            });
                         }
                     });
                 }
@@ -211,7 +217,7 @@ public class ChooseAreaFragment extends Fragment {
 
     private void showProgressDialog() {
         if (progressDialog == null) {
-            progressDialog = new ProgressDialog(getActivity().getApplicationContext());
+            progressDialog = new ProgressDialog((Activity)getContext());
             progressDialog.setMessage("Loading...");
             progressDialog.setCanceledOnTouchOutside(false);
         }

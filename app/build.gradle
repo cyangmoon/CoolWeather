@@ -17,7 +17,6 @@ android {
         }
     }
 }
-
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:27.1.1'
@@ -27,11 +26,12 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     implementation 'org.litepal.android:core:1.6.1'
     //操作数据库
-    implementation 'com.squareup.okhttp3:okhttp:3.7.0'
-    //网络请求
-    implementation 'com.google.code.gson:gson:2.8.0'
+    // implementation 'com.squareup.okhttp3:okhttp:3.7.0'
     //解析json数据
     implementation 'com.github.bumptech.glide:glide:3.7.0'
     //界面展示图片
     implementation files('libs/jsoup-1.11.3.jar')
+    //实现JSON文件直接映射到实体类
+    implementation 'com.google.code.gson:gson:2.8.0'
 }
+

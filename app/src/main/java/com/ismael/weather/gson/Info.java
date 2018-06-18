@@ -2,7 +2,7 @@ package com.ismael.weather.gson;
 
 import com.google.gson.annotations.SerializedName;
 
-public class Basic {
+public class Info {
 
     public String location;
     @SerializedName("parent_city")

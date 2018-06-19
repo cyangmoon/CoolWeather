@@ -1,20 +1,25 @@
 package com.ismael.weather;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
-
-import com.ismael.weather.util.Utility;
-
-import java.net.MalformedURLException;
-import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        this.finish();
+        startActivity(new Intent(this, WeatherActivity.class));
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        if (prefs.getString("countyCode", null) != null) {
+            startActivity(new Intent(this, WeatherActivity.class));
+            this.finish();
+        }
         setContentView(R.layout.activity_main);
-        new Thread(new Runnable() {
+       /* new Thread(new Runnable() {
             @Override
             public void run() {
                 String paras ="location=CN101201002&key=2ddc493728214103a449996c292367ee&lang=en";
@@ -29,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
             }
-        }).start();
+        }).start();*/
 
     }
 }

@@ -1,0 +1,16 @@
+<LinearLayout
+    xmlns:andriod="http://schemas.android.com/apk/res/android"
+    andriod:layout_width="match_parent"
+    andriod:layout_height="wrap_content"
+    andriod:orientation="horizontal"
+    andriod:padding="8dp"
+    andriod:layout_marginTop="50dp"
+    andriod:baselineAligned="false">
+
+    <include layout="@layout/daily_item"/>
+    <include layout="@layout/daily_item"/>
+    <include layout="@layout/daily_item"/>
+    <include layout="@layout/daily_item"/>
+    <include layout="@layout/daily_item"/>
+    <include layout="@layout/daily_item"/>
+   </LinearLayout>

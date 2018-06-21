@@ -5,6 +5,6 @@ public class WeatherNow {
     public Now now;
 
     public String toString(){
-        return basic.location+" "+basic.City+" "+basic.province +" :  "+now.cond_txt;
+        return basic.location+" "+basic.city+" "+basic.province +" :  "+now.cond_txt;
     }
 }

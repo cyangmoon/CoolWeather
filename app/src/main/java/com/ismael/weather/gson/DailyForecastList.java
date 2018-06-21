@@ -9,7 +9,7 @@ public class DailyForecastList {
     @SerializedName("daily_forecast")
     public List<DailyForcast> dailyForcastList;
 
-    class DailyForcast {
+    public class DailyForcast {
         public String cond_txt_d;
         public String cond_txt_n;
         public String date;

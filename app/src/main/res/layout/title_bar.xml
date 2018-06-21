@@ -8,8 +8,13 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="@color/transparent"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-        app:title="@string/app_name"
-        app:titleTextAppearance="@style/titleStyle" />
+        app:logo="@drawable/ic_place_24dp"
+
+        android:theme="@style/TitleBarStyle"
+        app:titleTextAppearance="@style/TextAppearanceStyle"
+        app:popupTheme="@style/ToolbarPopupTheme">
+
+        <include layout="@layout/current_location"/>
+
+    </android.support.v7.widget.Toolbar>
 </FrameLayout>

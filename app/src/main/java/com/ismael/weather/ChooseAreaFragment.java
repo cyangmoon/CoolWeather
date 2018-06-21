@@ -3,7 +3,9 @@ package com.ismael.weather;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -52,7 +54,7 @@ public class ChooseAreaFragment extends Fragment {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.choose_area, container, false);
+        View view = inflater.inflate(R.layout.fragment_choose_area, container, false);
         titleText =  view.findViewById(R.id.title_text);
         backButton =  view.findViewById(R.id.back_button);
         listView =  view.findViewById(R.id.list_view);
@@ -75,9 +77,16 @@ public class ChooseAreaFragment extends Fragment {
                     selectedCity = cityList.get(position);
                     queryCounties();
                 }else if (currentLevel == LEVEL_COUNTY) {
-                    int getCountyCode = countyList.get(position).getCountyCode();
-                    Intent intent = new Intent(getActivity(), WeatherActivity.class);
-                    intent.putExtra("weather_id", getCountyCode);
+                    int countyCode = countyList.get(position).getCountyCode();
+                    String countyName = countyList.get(position).getCountyName();
+                    SharedPreferences prfs =  PreferenceManager.getDefaultSharedPreferences(MainActivity.instance);
+                    SharedPreferences.Editor editor =prfs.edit();
+                    if(prfs.getString(countyName,"NotSavedCity").equals("NotSavedCity")){
+                        editor.putInt(countyName,countyCode);
+                    }
+                    editor.putInt("currentCountyCode",countyCode);
+                    editor.apply();
+                    Intent intent = new Intent(getActivity(), MainActivity.class);
                     startActivity(intent);
                     Objects.requireNonNull(getActivity()).finish();
                 }

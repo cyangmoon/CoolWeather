@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/ripple">
+    <!--颜色范围限定,drawable也可制定为图片资源或者形状资源-->
+    <!--如果在一个ripple标签中，添加一个item，在item的内部写上<selector>标签，
+    那么这个RippleDrawable在按下的时候，同时具有水波效果和selector指定的图层-->
+    <!--<item android:id="@android:id/mask"
+        android:drawable="@color/white"/>-->
+    <!--<item>
+        <selector>
+            <item
+                android:drawable="@drawable/icon_folder_i"
+                android:state_pressed="true">
+            </item>
+            <item
+                android:drawable="@drawable/icon_folder_r"
+                android:state_pressed="false">
+            </item>
+        </selector>
+    </item>-->
+</ripple>

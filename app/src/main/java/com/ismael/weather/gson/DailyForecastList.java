@@ -7,7 +7,7 @@ import java.util.List;
 public class DailyForecastList {
 
     @SerializedName("daily_forecast")
-    public List<DailyForcast> dailyForcastList;
+    public List<DailyForcast> dailyForecastList;
 
     public class DailyForcast {
         public String cond_txt_d;

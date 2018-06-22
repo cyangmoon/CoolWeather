@@ -18,6 +18,7 @@
     <android.support.v4.widget.SwipeRefreshLayout
         android:layout_width="match_parent"
         android:id="@+id/swipe_refresh"
+
         android:layout_height="wrap_content">
 
         <ScrollView
@@ -38,15 +39,12 @@
                 android:orientation="vertical">
 
                 <include
-                    android:id="@+id/now"
                     layout="@layout/now" />
 
                 <include
-                    android:id="@+id/daily_forecast"
                     layout="@layout/daily_forecast" />
 
                 <include
-                    android:id="@+id/hourly_forecast"
                     layout="@layout/hourly_forecast" />
 
                 <RelativeLayout
@@ -66,7 +64,7 @@
                         android:layout_alignParentBottom="true"
                         android:layout_centerHorizontal="true"
                         android:text="@string/bing"
-                        android:textColor="#38ffffff"
+                        android:textColor="#40ffffff"
                         android:layout_height="wrap_content" />
                 </RelativeLayout>
 

@@ -2,12 +2,12 @@ package com.ismael.weather;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,16 +21,18 @@ import com.ismael.weather.db.City;
 import com.ismael.weather.db.County;
 import com.ismael.weather.db.Province;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-import org.litepal.crud.DataSupport;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.NodeList;
 
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 public class ChooseAreaFragment extends Fragment {
 
@@ -44,13 +46,12 @@ public class ChooseAreaFragment extends Fragment {
     private ListView listView;
     private ArrayAdapter<String> adapter;
     private List<String> dataList = new ArrayList<>();
-    private List<Province> provinceList;
-    private List<City> cityList;
-    private List<County> countyList;
+    private List<Province> provinceList = new ArrayList<>();
+    private List<City> cityList = new ArrayList<>();
+    private List<County> countyList = new ArrayList<>();
     private Province selectedProvince;
     private City selectedCity;
     private int currentLevel;
-
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -86,8 +87,7 @@ public class ChooseAreaFragment extends Fragment {
                     }
                     editor.putInt("currentCountyCode",countyCode);
                     editor.apply();
-                    Intent intent = new Intent(getActivity(), MainActivity.class);
-                    startActivity(intent);
+                    getActivity().setResult(Activity.RESULT_OK,null);
                     Objects.requireNonNull(getActivity()).finish();
                 }
             }
@@ -104,15 +104,12 @@ public class ChooseAreaFragment extends Fragment {
         });
     }
 
-    interface NetListener{
-        void finishLoad();
-        void startLoad();
-    }
     private void queryProvinces() {
         titleText.setText("中国");
         backButton.setVisibility(View.GONE);
-        provinceList = DataSupport.findAll(Province.class);
+        parseXmlWithDom("province");
         if (provinceList.size()>0) {
+            getActivity().findViewById(R.id.loading_progressBar).setVisibility(View.GONE);
             dataList.clear();
             for (Province province : provinceList) {
                 dataList.add(province.getProvinceName());
@@ -120,43 +117,13 @@ public class ChooseAreaFragment extends Fragment {
             adapter.notifyDataSetChanged();
             listView.setSelection(0);
             currentLevel = LEVEL_PROVINCE;
-        } else {
-            DataSupport.deleteAll(Province.class,"");
-            DataSupport.deleteAll(County.class,"");
-            DataSupport.deleteAll(City.class,"");
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    queryFromServer("https://www.cnblogs.com/oucbl/p/6138963.html",new NetListener(){
-                        @Override
-                        public void startLoad() {
-                            ((Activity)getContext()).runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    showProgressDialog();
-                                }
-                            });
-                        }
-                        @Override
-                        public void finishLoad() {
-                            ((Activity) Objects.requireNonNull(getContext())).runOnUiThread(new Runnable(){
-                                @Override
-                                public void run() {
-                                    closeProgressDialog();
-                                    queryProvinces();
-                                }
-                            });
-                        }
-                    });
-                }
-            }).start();
         }
     }
 
     private void queryCities() {
         titleText.setText(selectedProvince.getProvinceName());
         backButton.setVisibility(View.VISIBLE);
-        cityList = DataSupport.where("provinceid = ?", String.valueOf(selectedProvince.getProvinceId())).find(City.class);
+        parseXmlWithDom("city",selectedProvince.getProvinceId());
         if (cityList.size() > 0) {
             dataList.clear();
             for (City city : cityList) {
@@ -171,7 +138,7 @@ public class ChooseAreaFragment extends Fragment {
     private void queryCounties() {
         titleText.setText(selectedCity.getCityName());
         backButton.setVisibility(View.VISIBLE);
-        countyList = DataSupport.where("cityid = ?", String.valueOf(selectedCity.getCityId())).find(County.class);
+        parseXmlWithDom("county",selectedCity.getCityId());
         if (countyList.size() > 0) {
             dataList.clear();
             for (County county : countyList) {
@@ -183,66 +150,56 @@ public class ChooseAreaFragment extends Fragment {
         }
     }
 
-    private void queryFromServer(String address,NetListener netListener) {
-        netListener.startLoad();
+    private void parseXmlWithDom(String type){
+        parseXmlWithDom(type,null);
+    }
+
+    private void parseXmlWithDom(final String type,String id){
         try {
-            Document document = Jsoup.connect(address).get();
-            Element body = document.getElementsByClass("preview").first();
-            Elements provinces = body.getElementsByTag("h3");
-            Province province;
-            for(int i=1;i< provinces.size();i++){
-                province = new Province();
-                province.setProvinceName(provinces.get(i).text());
-                province.setProvinceId(i);
-                province.save();
-            }
-            Elements citysAndCountys = body.getElementsByClass("xiaoshujiang_code_container");
-            int i=1;
-            for(i=1;i<citysAndCountys.size();i++){
-                City city;
-                County county;
-                String s = citysAndCountys.get(i).getElementsByTag("code").text().replaceAll(" ","");
-                String[] cityOrCounty = s.split("\\n");
-                int orderCityId = 0;
-                for(int j = 0;j<cityOrCounty.length;j++){
-                    if(!cityOrCounty[j].substring(cityOrCounty[j].length()-1).matches("\\d")){
-                        orderCityId =1000*i+j ;
-                        city = new City();
-                        city.setProvinceId(i);
-                        city.setCityName(cityOrCounty[j]);
-                        city.setCityId(orderCityId);
-                        city.save();
-                    }else {
-                        county = new County();
-                        county.setCityId(orderCityId);
-                        int m;
-                        for(m=0;m<cityOrCounty[j].length();m++){
-                            if(cityOrCounty[j].charAt(m)<58 && cityOrCounty[j].charAt(m)>47) break;
-                        }
-                        county.setCountyCode(Integer.parseInt(cityOrCounty[j].substring(m)));
-                        county.setCountyName(cityOrCounty[j].substring(0,m));
-                        county.save();
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            Document document = db.parse(getResources().getAssets().open("county_code_weather_china.xml"));
+            switch (type) {
+                case "province":
+                    provinceList.clear();
+                    NodeList nodeListOfProvince = document.getElementsByTagName("province");
+                    Log.d("DOM", "Total provinces: " + nodeListOfProvince.getLength());
+                    for (int i = 0; i < nodeListOfProvince.getLength(); i++) {
+                        NamedNodeMap attr = nodeListOfProvince.item(i).getAttributes();
+                        Province province = new Province();
+                        province.setProvinceId(attr.item(0).getNodeValue());
+                        province.setProvinceName(attr.item(1).getNodeValue());
+                        provinceList.add(province);
                     }
-                }
+                    break;
+                case "city":
+                    cityList.clear();
+                    Element provinceNode = document.getElementById(id);
+                    NodeList nodeListOfCity = provinceNode.getElementsByTagName("city");
+                    for (int j = 0; j < nodeListOfCity.getLength(); j++) {
+                        NamedNodeMap attr = nodeListOfCity.item(j).getAttributes();
+                        City city = new City();
+                        city.setCityId(attr.item(0).getNodeValue());
+                        city.setCityName(attr.item(1).getNodeValue());
+                        cityList.add(city);
+                    }
+                    break;
+                default:
+                    countyList.clear();
+                    Element cityNode = document.getElementById(id);
+                    NodeList nodeListOfCounty = cityNode.getElementsByTagName("county");
+                    for (int m = 0; m < nodeListOfCounty.getLength(); m++) {
+                        NamedNodeMap attr = nodeListOfCounty.item(m).getAttributes();
+                        County county = new County();
+                        county.setCityId(attr.item(0).getNodeValue());
+                        county.setCountyName(attr.item(1).getNodeValue());
+                        county.setCountyCode(Integer.parseInt(attr.item(2).getNodeValue()));
+                        countyList.add(county);
+                    }
+                    break;
             }
-            netListener.finishLoad();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void showProgressDialog() {
-        if (progressDialog == null) {
-            progressDialog = new ProgressDialog((Activity)getContext());
-            progressDialog.setMessage("Loading...");
-            progressDialog.setCanceledOnTouchOutside(false);
-        }
-        progressDialog.show();
-    }
-
-    private void closeProgressDialog() {
-        if (progressDialog != null) {
-            progressDialog.dismiss();
+        } catch (Exception e) {
+            Log.e("DOM",e.getMessage()+ Arrays.toString(e.getStackTrace()));
         }
     }
 

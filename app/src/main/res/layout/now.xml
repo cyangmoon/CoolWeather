@@ -20,14 +20,16 @@
         android:layout_width="match_parent"
         tool:text="tem"
         android:layout_height="wrap_content"
-        android:textSize="60sp" />
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:textSize="70sp" />
 
     <TextView
         android:id="@+id/weather_now_type_textView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="15dp"
+        android:textColor="@color/white"
         tool:text="type"
-        android:textSize="20sp" />
+        android:textSize="18sp" />
 </LinearLayout>
 </RelativeLayout>

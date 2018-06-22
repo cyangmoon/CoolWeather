@@ -9,7 +9,7 @@ public class HourlyForecastList {
     @SerializedName("hourly")
     public List<HourlyForecast> hourlyForecastList;
 
-    class HourlyForecast {
+    public class HourlyForecast {
         public String cond_txt;
         public String hum;
         public String time;

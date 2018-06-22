@@ -6,13 +6,13 @@ public class City extends DataSupport {
 
     private String cityName;
     private int provinceId;
-    private int cityId;
+    private String cityId;
 
-    public int getCityId() {
+    public String getCityId() {
         return cityId;
     }
 
-    public void setCityId(int cityId) {
+    public void setCityId(String cityId) {
         this.cityId = cityId;
     }
 

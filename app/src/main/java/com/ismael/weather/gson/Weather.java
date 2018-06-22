@@ -3,8 +3,8 @@ package com.ismael.weather.gson;
 public class Weather {
 
     public WeatherNow weatherNow;
-    public DailyForecastList dailyForecastList;
-    public HourlyForecastList hourlyForecastList;
+    public DailyForecastList daily;
+    public HourlyForecastList hourly;
 
     private Weather(){}
 

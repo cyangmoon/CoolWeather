@@ -94,9 +94,9 @@ public class WeatherUtility {
                         URL url_1 = new URL("https://free-api.heweather.com/s6/weather/now?" + paras);
                         Weather.getInstance().weatherNow = WeatherUtility.handleWeatherNowResponse(url_1);
                         URL url_3 = new URL("https://free-api.heweather.com/s6/weather/forecast?" + paras);
-                        Weather.getInstance().dailyForecastList = WeatherUtility.handleDailyForecastResponse(url_3);
+                        Weather.getInstance().daily = WeatherUtility.handleDailyForecastResponse(url_3);
                         URL url_2 = new URL("https://free-api.heweather.com/s6/weather/hourly?" + paras);
-                        Weather.getInstance().hourlyForecastList = WeatherUtility.handleHourlyForecastResponse(url_2);
+                        Weather.getInstance().hourly = WeatherUtility.handleHourlyForecastResponse(url_2);
                         Log.i("weather", "refreshed weather");
                     } catch (MalformedURLException e) {
                         e.printStackTrace();

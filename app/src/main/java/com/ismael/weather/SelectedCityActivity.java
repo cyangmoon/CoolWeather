@@ -14,18 +14,14 @@ public class SelectedCityActivity extends AppCompatActivity implements View.OnCl
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.i("order","2--onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_selected_city);
-        init();
-    }
-
-    void init(){
         Toolbar toolbar = findViewById(R.id.selected_city_toolbar);
         setSupportActionBar(toolbar);
-        Objects.requireNonNull(getSupportActionBar()).setDisplayShowTitleEnabled(false);
+        Objects.requireNonNull(getSupportActionBar()).setDisplayShowTitleEnabled(false);//不显示标题
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        findViewById(R.id.fab).setOnClickListener(this);
+        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_arrow_back_24dp);
+        findViewById(R.id.fab).setOnClickListener(this);//设置悬浮按钮监听器
     }
 
     @Override
@@ -35,7 +31,6 @@ public class SelectedCityActivity extends AppCompatActivity implements View.OnCl
                 this.finish();
                 break;
             }
-            default:
         }
         return true;
     }

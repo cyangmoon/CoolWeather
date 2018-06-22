@@ -4,6 +4,11 @@
     <string name="about_name">About</string>
     <string name="settings">Setting</string>
     <string name="bing">Pic from Bing Daily</string>
-    <string name="net_not_available">Internet not Available</string>
+    <string name="net_not_available">Internet not available</string>
     <string name="Select_city">Select city</string>
+    <string name="just_now">just updated</string>
+    <string name="updated">updated</string>
+    <string name="updated_1_hour_ago">updated 1 hour ago</string>
+    <string name="mins_ago">mins ago</string>
+    <string name="hours_ago">hours ago</string>
 </resources>

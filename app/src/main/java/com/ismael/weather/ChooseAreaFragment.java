@@ -107,7 +107,7 @@ public class ChooseAreaFragment extends Fragment {
     private void queryProvinces() {
         titleText.setText("中国");
         backButton.setVisibility(View.GONE);
-        parseXmlWithDom("province");
+        parseXmlWithDom("province",null);
         if (provinceList.size()>0) {
             getActivity().findViewById(R.id.loading_progressBar).setVisibility(View.GONE);
             dataList.clear();
@@ -148,10 +148,6 @@ public class ChooseAreaFragment extends Fragment {
             listView.setSelection(0);
             currentLevel = LEVEL_COUNTY;
         }
-    }
-
-    private void parseXmlWithDom(String type){
-        parseXmlWithDom(type,null);
     }
 
     private void parseXmlWithDom(final String type,String id){

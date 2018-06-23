@@ -12,16 +12,19 @@ import android.preference.PreferenceManager;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
+import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.ismael.weather.custom.ReboundScrollView;
 import com.ismael.weather.gson.Weather;
 import com.ismael.weather.util.BasicTool;
 import com.ismael.weather.util.InternetUtility;
@@ -33,6 +36,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Calendar;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
@@ -62,6 +66,14 @@ public class MainActivity extends AppCompatActivity {
         initSwipeRefreshLayout();
         updateWeatherDataFromServer();
         getBingImage();
+        ((ReboundScrollView)findViewById(R.id.scrollView)).setEnableTopRebound(false);
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        int height = displayMetrics.heightPixels-BasicTool.getActionBarHeight(this)-BasicTool.getStatusBarHeight(this);
+        RelativeLayout mrlay = findViewById(R.id.now_relativeLayout);
+        android.view.ViewGroup.LayoutParams layoutParams =mrlay.getLayoutParams();
+        layoutParams.height = height;
+        mrlay.setLayoutParams(layoutParams);
     }
 
     private void initSwipeRefreshLayout(){
@@ -102,7 +114,6 @@ public class MainActivity extends AppCompatActivity {
                                         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
                                         editor.putInt("countyCode", Integer.parseInt(weather.weatherNow.basic.countyIdWithCn.substring(2)));
                                         editor.apply();
-                                        lastRefreshTime = System.currentTimeMillis();
                                         showWeatherData();
                                         showTimeInterval();
                                         swipeRefreshLayout.setRefreshing(false);
@@ -112,6 +123,7 @@ public class MainActivity extends AppCompatActivity {
                             }
                         });
                     }
+                    lastRefreshTime = System.currentTimeMillis();
                 } else {
                     runOnUiThread(new Runnable() {
                         @Override
@@ -161,20 +173,20 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.i("order","1--onActivityResult");
-
         switch (requestCode) {
             case 1: {
                 if (resultCode == RESULT_OK) {
+                    ScrollView scrollView= findViewById(R.id.scrollView);
+                    scrollView.fullScroll(View.FOCUS_UP);
                     if (InternetUtility.isNetworkConnected(MainActivity.instance)) {
                         if ((findViewById(R.id.image)).getBackground() == null) {
                             getBingImage();
                         }
                         updateWeatherDataFromServer();
-                        findViewById(R.id.scrollView).setVisibility(View.VISIBLE);
+                        scrollView.setVisibility(View.VISIBLE);
                         showTimeInterval();
                     } else {
-                        findViewById(R.id.scrollView).setVisibility(View.INVISIBLE);
+                        scrollView.setVisibility(View.INVISIBLE);
                         ((TextView) findViewById(R.id.location_textView)).setText(R.string.app_name);
                         ((TextView) findViewById(R.id.refresh_textView)).setText(R.string.net_not_available);
                     }
@@ -206,7 +218,6 @@ public class MainActivity extends AppCompatActivity {
                 WeatherUtility.refreshWeather(language, new WeatherUtility.RefreshFinishedListener() {
                     @Override
                     public void onFinish() {
-                        lastRefreshTime = System.currentTimeMillis();
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -224,6 +235,8 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
             }
+            lastRefreshTime = System.currentTimeMillis();
+
         } else {
             findViewById(R.id.scrollView).setVisibility(View.INVISIBLE);
             ((TextView) findViewById(R.id.location_textView)).setText(R.string.app_name);
@@ -281,9 +294,9 @@ public class MainActivity extends AppCompatActivity {
                 .append(weather.daily.dailyForecastList.get(0).tmp_min)
                 .append("℃");
         ((TextView) findViewById(R.id.weather_now_type_textView)).setText(sb);
-        LinearLayout linearLayout = findViewById(R.id.hourly_forecast_linearLayout);
-        for (int i = 0; i < linearLayout.getChildCount(); i++) {
-            View view = linearLayout.getChildAt(i);
+        LinearLayout now_linearLayout = findViewById(R.id.hourly_forecast_linearLayout);
+        for (int i = 0; i < now_linearLayout.getChildCount(); i++) {
+            View view = now_linearLayout.getChildAt(i);
             if (view instanceof LinearLayout) {
                 String time = weather.hourly.hourlyForecastList.get(i).time;
 
@@ -291,6 +304,16 @@ public class MainActivity extends AppCompatActivity {
                 ((TextView) ((LinearLayout) view).getChildAt(2)).setText(weather.hourly.hourlyForecastList.get(i).tmp + "°");
             }
         }
+        LinearLayout dailyLinearLayout = findViewById(R.id.daily_linearLayout);
+        Calendar calendar = Calendar.getInstance();
+        ((TextView)((LinearLayout)dailyLinearLayout.getChildAt(0)).getChildAt(0)).setText(calendar.get(Calendar.MONTH)+1+"/"+calendar.get(Calendar.DATE));
+        ((TextView)((LinearLayout)dailyLinearLayout.getChildAt(0)).getChildAt(1)).setText("Today");
+        for(int j=1;j<dailyLinearLayout.getChildCount();j++){
+            calendar.add(Calendar.DATE,1);
+            ((TextView)((LinearLayout)dailyLinearLayout.getChildAt(j)).getChildAt(0)).setText(calendar.get(Calendar.MONTH)+1+"/"+calendar.get(Calendar.DATE));
+            ((TextView)((LinearLayout)dailyLinearLayout.getChildAt(j)).getChildAt(1)).setText(calendar.getTime().toString().substring(0,3));
+        }
+
     }
 
     void showTimeInterval() {

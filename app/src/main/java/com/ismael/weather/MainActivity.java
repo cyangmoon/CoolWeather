@@ -29,6 +29,7 @@ import com.ismael.weather.gson.Weather;
 import com.ismael.weather.util.BasicTool;
 import com.ismael.weather.util.InternetUtility;
 import com.ismael.weather.util.MyToast;
+import com.ismael.weather.util.ThreadFinishListener;
 import com.ismael.weather.util.WeatherUtility;
 
 import java.io.BufferedReader;
@@ -45,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
     public Weather weather = Weather.getInstance();
     @SuppressLint("StaticFieldLeak")
     public static Activity instance = null;
+    boolean firstBoot = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,18 +66,21 @@ public class MainActivity extends AppCompatActivity {
         getWindow().setStatusBarColor(Color.TRANSPARENT);
         //下拉刷新设置
         initSwipeRefreshLayout();
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt("currentCountyCode",sharedPreferences.getInt("permanentCountyCode",0));
+        editor.apply();
         updateWeatherDataFromServer();
         getBingImage();
+        findViewById(R.id.scrollView).setVisibility(View.VISIBLE);
         ((ReboundScrollView)findViewById(R.id.scrollView)).setEnableTopRebound(false);
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        int height = displayMetrics.heightPixels-BasicTool.getActionBarHeight(this)-BasicTool.getStatusBarHeight(this);
         RelativeLayout mrlay = findViewById(R.id.now_relativeLayout);
         android.view.ViewGroup.LayoutParams layoutParams =mrlay.getLayoutParams();
-        layoutParams.height = height;
+        layoutParams.height = displayMetrics.heightPixels-BasicTool.getActionBarHeight(this)-BasicTool.getStatusBarHeight(this);
         mrlay.setLayoutParams(layoutParams);
     }
-
     private void initSwipeRefreshLayout(){
         final SwipeRefreshLayout swipeRefreshLayout = findViewById(R.id.swipe_refresh);
         swipeRefreshLayout.setProgressViewEndTarget(true, getResources().getDisplayMetrics().heightPixels /6);
@@ -88,36 +93,42 @@ public class MainActivity extends AppCompatActivity {
                     int countyCode = prefs.getInt("currentCountyCode", 0);
                     String language = prefs.getString("language", "en");
                     if (countyCode != 0) {
-                        WeatherUtility.refreshWeather("CN" + countyCode, language, new WeatherUtility.RefreshFinishedListener() {
+                        WeatherUtility.refreshWeather("CN" + countyCode, language, new ThreadFinishListener() {
                             @Override
                             public void onFinish() {
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        findViewById(R.id.scrollView).setVisibility(View.VISIBLE);
                                         showWeatherData();
                                         showTimeInterval();
                                         swipeRefreshLayout.setRefreshing(false);
-                                        MyToast.toastMessage(getApplicationContext(), "Weather updated", Toast.LENGTH_SHORT);
+                                        MyToast.toastMessage(getApplicationContext(), "Weather updated", Toast.LENGTH_SHORT,getColor(R.color.white));
                                     }
                                 });
                             }
                         });
                     } else {
-                        WeatherUtility.refreshWeather(language, new WeatherUtility.RefreshFinishedListener() {
+                        WeatherUtility.refreshWeather(language, new ThreadFinishListener() {
                             @Override
                             public void onFinish() {
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        findViewById(R.id.scrollView).setVisibility(View.VISIBLE);
-                                        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
-                                        editor.putInt("countyCode", Integer.parseInt(weather.weatherNow.basic.countyIdWithCn.substring(2)));
+                                        int countyCode=Integer.parseInt(weather.weatherNow.basic.countyIdWithCn.substring(2));
+                                        String countyName = weather.weatherNow.basic.location;
+                                        SharedPreferences sharedPreferences = getSharedPreferences("added_city",MODE_PRIVATE);
+                                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                                        if (sharedPreferences.getString(countyName, "NotSavedCity").equals("NotSavedCity")) { editor.putInt(countyName, countyCode); }
                                         editor.apply();
+                                        //保存当前城市编码
+                                        SharedPreferences.Editor editorForCurrent = PreferenceManager.getDefaultSharedPreferences(MainActivity.instance).edit();
+                                        editorForCurrent.putInt("currentCountyCode", countyCode);
+                                        editorForCurrent.putInt("permanentCountyCode",countyCode);
+                                        editorForCurrent.apply();
                                         showWeatherData();
                                         showTimeInterval();
                                         swipeRefreshLayout.setRefreshing(false);
-                                        MyToast.toastMessage(getApplicationContext(), "Weather updated", Toast.LENGTH_SHORT);
+                                        MyToast.toastMessage(getApplicationContext(), "Weather updated", Toast.LENGTH_SHORT,getColor(R.color.white));
                                     }
                                 });
                             }
@@ -129,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void run() {
                             swipeRefreshLayout.setRefreshing(false);
-                            MyToast.toastMessage(getApplicationContext(), "Internet not available", Toast.LENGTH_SHORT);
+                            MyToast.toastMessage(getApplicationContext(), "Internet not available", Toast.LENGTH_SHORT,getColor(R.color.white));
                         }
                     });
                 }
@@ -137,8 +148,6 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-
-    boolean firstBoot = true;
     @Override
     protected void onResume() {
         super.onResume();
@@ -183,7 +192,6 @@ public class MainActivity extends AppCompatActivity {
                             getBingImage();
                         }
                         updateWeatherDataFromServer();
-                        scrollView.setVisibility(View.VISIBLE);
                         showTimeInterval();
                     } else {
                         scrollView.setVisibility(View.INVISIBLE);
@@ -201,7 +209,7 @@ public class MainActivity extends AppCompatActivity {
             int countyCode = prefs.getInt("currentCountyCode", 0);
             String language = prefs.getString("language", "en");
             if (countyCode != 0) {
-                WeatherUtility.refreshWeather("CN" + countyCode, language, new WeatherUtility.RefreshFinishedListener() {
+                WeatherUtility.refreshWeather("CN" + countyCode, language, new ThreadFinishListener() {
                     @Override
                     public void onFinish() {
                         lastRefreshTime = System.currentTimeMillis();
@@ -215,7 +223,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
             } else {
-                WeatherUtility.refreshWeather(language, new WeatherUtility.RefreshFinishedListener() {
+                WeatherUtility.refreshWeather(language, new ThreadFinishListener() {
                     @Override
                     public void onFinish() {
                         runOnUiThread(new Runnable() {
@@ -223,11 +231,16 @@ public class MainActivity extends AppCompatActivity {
                             public void run() {
                                 int countyCode = Integer.parseInt(weather.weatherNow.basic.countyIdWithCn.substring(2));
                                 String countyName = weather.weatherNow.basic.location;
-                                SharedPreferences prfs = PreferenceManager.getDefaultSharedPreferences(MainActivity.instance);
-                                SharedPreferences.Editor editor = prfs.edit();
-                                if (prfs.getString(countyName, "NotSavedCity").equals("NotSavedCity")) { editor.putInt(countyName, countyCode); }
-                                editor.putInt("currentCountyCode", countyCode);
-                                editor.apply();
+                                SharedPreferences sharedPreferences = getSharedPreferences("added_city",MODE_PRIVATE);
+                                SharedPreferences.Editor editor = sharedPreferences.edit();
+                                if (sharedPreferences.getString(countyName, "NotSavedCity").equals("NotSavedCity")) {
+                                    editor.putInt(countyName, countyCode);
+                                    editor.apply();
+                                }
+                                SharedPreferences.Editor editorForCurrentCounty= PreferenceManager.getDefaultSharedPreferences(MainActivity.instance).edit();
+                                editorForCurrentCounty.putInt("currentCountyCode", countyCode);
+                                editorForCurrentCounty.putInt("permanentCountyCode",countyCode);
+                                editorForCurrentCounty.apply();
                                 showTimeInterval();
                                 showWeatherData();
                             }
@@ -241,7 +254,7 @@ public class MainActivity extends AppCompatActivity {
             findViewById(R.id.scrollView).setVisibility(View.INVISIBLE);
             ((TextView) findViewById(R.id.location_textView)).setText(R.string.app_name);
             ((TextView) findViewById(R.id.refresh_textView)).setText(R.string.net_not_available);
-            MyToast.toastMessage(getApplicationContext(), "Internet not available", Toast.LENGTH_SHORT);
+            MyToast.toastMessage(getApplicationContext(), "Internet not available", Toast.LENGTH_SHORT,getColor(R.color.white));
         }
     }
 
@@ -283,6 +296,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void showWeatherData() {
+        findViewById(R.id.scrollView).setVisibility(View.VISIBLE);
         String location = BasicTool.firstUpperCaseString(weather.weatherNow.basic.location);
         ((TextView) findViewById(R.id.location_textView)).setText(location);
         ((TextView) findViewById(R.id.weather_now_tmp_textView)).setText(weather.weatherNow.now.tmp +"°");

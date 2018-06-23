@@ -21,8 +21,6 @@ import java.net.URL;
 
 public class WeatherUtility {
 
-    public interface RefreshFinishedListener{ void onFinish();}
-
     private static String httpResponse(URL url) {
         HttpURLConnection connection = null;
         StringBuilder sb = new StringBuilder();
@@ -45,7 +43,7 @@ public class WeatherUtility {
         return null;
     }
 
-    private static WeatherNow handleWeatherNowResponse(URL url) {
+    public static WeatherNow handleWeatherNowResponse(URL url) {
         try {
             JSONObject jsonObject = new JSONObject(httpResponse(url));
             JSONArray jsonArray = jsonObject.getJSONArray("HeWeather6");
@@ -81,7 +79,7 @@ public class WeatherUtility {
         return null;
     }
 
-    public static void refreshWeather(final String locationCode,final String language,final RefreshFinishedListener listener) {
+    public static void refreshWeather(final String locationCode,final String language,final ThreadFinishListener listener) {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -107,7 +105,7 @@ public class WeatherUtility {
             }).start();
     }
 
-    public static void refreshWeather(final String language,final RefreshFinishedListener listener){
+    public static void refreshWeather(final String language,final ThreadFinishListener listener){
         refreshWeather("auto_ip",language,listener);
     }
 

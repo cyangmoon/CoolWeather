@@ -2,6 +2,7 @@ package com.ismael.weather;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -80,13 +81,15 @@ public class ChooseAreaFragment extends Fragment {
                 }else if (currentLevel == LEVEL_COUNTY) {
                     int countyCode = countyList.get(position).getCountyCode();
                     String countyName = countyList.get(position).getCountyName();
-                    SharedPreferences prfs =  PreferenceManager.getDefaultSharedPreferences(MainActivity.instance);
+                    SharedPreferences prfs =  getActivity().getSharedPreferences("added_city", Context.MODE_PRIVATE);
                     SharedPreferences.Editor editor =prfs.edit();
                     if(prfs.getString(countyName,"NotSavedCity").equals("NotSavedCity")){
                         editor.putInt(countyName,countyCode);
+                        editor.apply();
                     }
-                    editor.putInt("currentCountyCode",countyCode);
-                    editor.apply();
+                    SharedPreferences.Editor editorForCurrentCounty= PreferenceManager.getDefaultSharedPreferences(MainActivity.instance).edit();
+                    editorForCurrentCounty.putInt("currentCountyCode", countyCode);
+                    editorForCurrentCounty.apply();
                     getActivity().setResult(Activity.RESULT_OK,null);
                     Objects.requireNonNull(getActivity()).finish();
                 }

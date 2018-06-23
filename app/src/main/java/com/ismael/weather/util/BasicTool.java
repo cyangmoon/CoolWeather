@@ -44,4 +44,5 @@ public class BasicTool {
 
         return (int)actionbarSizeTypedArray.getDimension(0, 0);
     }
+
 }

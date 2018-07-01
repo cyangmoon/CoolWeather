@@ -5,6 +5,7 @@ import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.widget.ScrollView;
@@ -83,13 +84,12 @@ public class ReboundScrollView extends ScrollView {
                 int deltaY = (int) (ev.getY() - lastY);
                 //deltaY > 0 下拉 deltaY < 0 上拉
 
-
                 //disable top or bottom rebound
                 if ((!mEnableTopRebound && deltaY > 0) || (!mEnableBottomRebound && deltaY < 0)){
                     break;
                 }
 
-                int offset = (int) (deltaY * 0.48);
+                int offset = (int) (deltaY * (1-0.618));
                 mContentView.layout(mRect.left, mRect.top + offset, mRect.right, mRect.bottom + offset);
                 rebound = true;
                 break;
@@ -99,6 +99,7 @@ public class ReboundScrollView extends ScrollView {
                 reboundDirection = mContentView.getTop() - mRect.top;
                 TranslateAnimation animation = new TranslateAnimation(0, 0, mContentView.getTop(), mRect.top);
                 animation.setDuration(300);
+                animation.setInterpolator(new AccelerateDecelerateInterpolator());
                 animation.setAnimationListener(new Animation.AnimationListener() {
                     @Override
                     public void onAnimationStart(Animation animation) {
@@ -132,7 +133,7 @@ public class ReboundScrollView extends ScrollView {
     }
 
     @Override
-    public void setFillViewport(boolean fillViewport) {
+    public void setFillViewport(boolean fillViewport)   {
         super.setFillViewport(true); //默认是填充ScrollView 或者再XML布局文件中设置fillViewport属性
     }
 

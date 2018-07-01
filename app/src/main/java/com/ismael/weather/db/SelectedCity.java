@@ -5,6 +5,16 @@ public class SelectedCity {
     private String cityWeatherInfo = "......";
     private int countyCode = 0;
 
+    public String getCityNameInFile() {
+        return cityNameInFile;
+    }
+
+    public void setCityNameInFile(String cityNameInFile) {
+        this.cityNameInFile = cityNameInFile;
+    }
+
+    private String cityNameInFile;
+
     public String getCityName() {
         return cityName;
     }

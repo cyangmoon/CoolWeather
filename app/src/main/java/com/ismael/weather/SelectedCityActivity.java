@@ -1,7 +1,10 @@
 package com.ismael.weather;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -17,10 +20,13 @@ import com.ismael.weather.util.BasicTool;
 import com.ismael.weather.util.InternetUtility;
 import com.ismael.weather.util.ThreadFinishListener;
 import com.ismael.weather.util.WeatherUtility;
+import com.yanzhenjie.recyclerview.swipe.SwipeMenuRecyclerView;
+import com.yanzhenjie.recyclerview.swipe.touch.OnItemMoveListener;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -28,6 +34,7 @@ import java.util.Objects;
 public class SelectedCityActivity extends AppCompatActivity implements View.OnClickListener {
 
     private List<SelectedCity> selectedCityList = new ArrayList<>();
+     FloatingActionButton fab;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,11 +47,49 @@ public class SelectedCityActivity extends AppCompatActivity implements View.OnCl
         getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_arrow_back_24dp);
         findViewById(R.id.fab).setOnClickListener(this);//设置悬浮按钮监听器
         initSelectedCityList("en",listener);
-        RecyclerView recyclerView = findViewById(R.id.recycleView);
+        SwipeMenuRecyclerView recyclerView = findViewById(R.id.recycleView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
-        if(selectedCityList.size() > 5){
-          //  ((FloatingActionButton)findViewById(R.id.fab)).setBackgroundTintList(getColor(R.color.white));
+        recyclerView.setLongPressDragEnabled(true);
+        recyclerView.setItemViewSwipeEnabled(true);
+        OnItemMoveListener mItemMoveListener = new OnItemMoveListener() {
+            @Override
+            public boolean onItemMove(RecyclerView.ViewHolder srcHolder, RecyclerView.ViewHolder targetHolder) {
+                int fromPosition = srcHolder.getAdapterPosition();
+                int toPosition = targetHolder.getAdapterPosition();
+                Collections.swap(selectedCityList, fromPosition, toPosition);
+                adapter.notifyItemMoved(fromPosition, toPosition);
+                return true;
+            }
+            @Override
+            public void onItemDismiss(RecyclerView.ViewHolder srcHolder) {
+                int position = srcHolder.getAdapterPosition();
+                SharedPreferences.Editor editor = getSharedPreferences("added_city",MODE_PRIVATE).edit();
+                editor.remove(selectedCityList.get(position).getCityNameInFile());
+                editor.apply();
+                selectedCityList.remove(position);
+                adapter.notifyItemRemoved(position);
+                changeFabColor();
+            }
+        };
+        recyclerView.setOnItemMoveListener(mItemMoveListener);// 监听拖拽，更新UI。
+        changeFabColor();
+    }
+
+    void changeFabColor(){
+        fab = findViewById(R.id.fab);
+        if(selectedCityList.size() > 5 && fab.getRippleColor()==getColor(R.color.white)){
+            fab.hide();
+            setFloatingActionButtonColors(fab,getColor(R.color.white),getColor(R.color.bg));
+            fab.setRippleColor(getColor(R.color.bg));
+            fab.setImageResource(R.drawable.add_bg_24dp);
+            fab.show();
+        }else if(selectedCityList.size() <= 5 && fab.getRippleColor()==getColor(R.color.bg)){
+            fab.hide();
+            setFloatingActionButtonColors(fab,getColor(R.color.bg),getColor(R.color.white));
+            fab.setRippleColor(getColor(R.color.white));
+            fab.setImageResource(R.drawable.ic_add_24dp);
+            fab.show();
         }
     }
 
@@ -109,8 +154,7 @@ public class SelectedCityActivity extends AppCompatActivity implements View.OnCl
                     int m = 0;
                     for (Map.Entry<String, ?> entry : allContent.entrySet()) {
                         StringBuilder paras = new StringBuilder();
-                        paras.append("location=")
-                                .append("CN"+entry.getValue().toString())
+                        paras.append("location=").append("CN").append(entry.getValue().toString())
                                 .append("&key=2ddc493728214103a449996c292367ee&lang=")
                                 .append(language);
                         URL url = null;
@@ -122,8 +166,10 @@ public class SelectedCityActivity extends AppCompatActivity implements View.OnCl
                         WeatherNow weatherNow = WeatherUtility.handleWeatherNowResponse(url);
                         SelectedCity selectedCity = new SelectedCity();
                         selectedCity.setCountyCode(Integer.parseInt(entry.getValue().toString()));
+                        assert weatherNow != null;
                         selectedCity.setCityName(BasicTool.firstUpperCaseString(weatherNow.basic.location));
                         selectedCity.setCityWeatherInfo(weatherNow.now.tmp + "° " + weatherNow.now.cond_txt);
+                        selectedCity.setCityNameInFile(entry.getKey());
                         selectedCityList.set(m,selectedCity);
                         m++;
                         listener.onFinish();
@@ -131,5 +177,17 @@ public class SelectedCityActivity extends AppCompatActivity implements View.OnCl
                 }
             }).start();
         }
+    }
+
+    private void setFloatingActionButtonColors(FloatingActionButton fab, int primaryColor, int rippleColor) {
+        int[][] states = {
+                {android.R.attr.state_enabled},
+                {android.R.attr.state_pressed},};
+        int[] colors = {
+                primaryColor,
+                rippleColor,
+        };
+        ColorStateList colorStateList = new ColorStateList(states, colors);
+        fab.setBackgroundTintList(colorStateList);
     }
 }

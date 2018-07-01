@@ -83,7 +83,7 @@ public class ChooseAreaFragment extends Fragment {
                     String countyName = countyList.get(position).getCountyName();
                     SharedPreferences prfs =  getActivity().getSharedPreferences("added_city", Context.MODE_PRIVATE);
                     SharedPreferences.Editor editor =prfs.edit();
-                    if(prfs.getString(countyName,"NotSavedCity").equals("NotSavedCity")){
+                    if(prfs.getInt(countyName,0) == 0){
                         editor.putInt(countyName,countyCode);
                         editor.apply();
                     }

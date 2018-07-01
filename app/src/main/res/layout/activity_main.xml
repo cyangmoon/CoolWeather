@@ -1,86 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg"
-    android:fitsSystemWindows="true"
-    android:orientation="vertical">
+    android:fitsSystemWindows="true">
 
-    <LinearLayout
+    <!--title bar-->
+    <include
+        android:id="@+id/toolbar_include"
+        layout="@layout/title_bar" />
+
+    <com.ismael.weather.custom.ReboundScrollView
+        android:id="@+id/scrollView"
+        android:overScrollMode="never"
+        android:layout_below="@id/toolbar_include"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <include
-            android:id="@+id/title_bar"
-            layout="@layout/title_bar" />
-    </LinearLayout>
-
-    <android.support.v4.widget.SwipeRefreshLayout
-        android:id="@+id/swipe_refresh"
-        android:layout_width="match_parent"
+        android:background="#4B97D1"
         android:layout_height="wrap_content"
-        android:background="@color/bg">
-
-        <com.ismael.weather.custom.ReboundScrollView
-            android:id="@+id/scrollView"
+        android:scrollbars="none">
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginBottom="8dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_weight="1"
-            android:background="@color/transparent"
-            android:scrollbars="none">
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+            <include layout="@layout/now" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
+            <include layout="@layout/daily_forecast" />
 
-                    <include layout="@layout/now" />
+            <include layout="@layout/hourly_forecast" />
 
-                    <include layout="@layout/daily_forecast" />
+        </LinearLayout>
 
-                    <include layout="@layout/hourly_forecast" />
+    </com.ismael.weather.custom.ReboundScrollView>
 
-                    <RelativeLayout
-                        android:id="@+id/image_relativeLayout"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:visibility="gone">
+    <com.ismael.weather.custom.TopWaveSurfaceView
+        android:id="@+id/topWave"
+        android:layout_width="match_parent"
+        android:layout_height="100px"
+        android:layout_below="@id/toolbar_include"/>
 
-                        <ImageView
-                            android:id="@+id/image"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center" />
-                    </RelativeLayout>
 
-                </LinearLayout>
-
-                <RelativeLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentBottom="true"
-                    android:layout_centerHorizontal="true"
-                    android:gravity="center">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:text="@string/bing"
-                        android:textColor="#40ffffff" />
-                </RelativeLayout>
-
-            </RelativeLayout>
-
-        </com.ismael.weather.custom.ReboundScrollView>
-    </android.support.v4.widget.SwipeRefreshLayout>
-
-</LinearLayout>
+</RelativeLayout>

@@ -7,8 +7,8 @@
     <TextView
         android:id="@+id/toast_textView"
         android:layout_width="wrap_content"
-        android:textSize="18sp"
-        android:layout_marginBottom="13dp"
-        android:textColor="@color/white_trans"
+        android:textSize="16sp"
+        android:layout_marginBottom="5dp"
+        android:textColor="@color/transparent"
         android:layout_height="wrap_content" />
 </LinearLayout>

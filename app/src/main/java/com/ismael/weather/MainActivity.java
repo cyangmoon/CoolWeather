@@ -4,27 +4,22 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
 import com.ismael.weather.custom.ReboundScrollView;
+import com.ismael.weather.custom.TopWaveSurfaceView;
 import com.ismael.weather.gson.Weather;
 import com.ismael.weather.util.BasicTool;
 import com.ismael.weather.util.InternetUtility;
@@ -32,21 +27,16 @@ import com.ismael.weather.util.MyToast;
 import com.ismael.weather.util.ThreadFinishListener;
 import com.ismael.weather.util.WeatherUtility;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.Calendar;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
-    private long lastRefreshTime = 0;
-    public Weather weather = Weather.getInstance();
     @SuppressLint("StaticFieldLeak")
     public static Activity instance = null;
-    boolean firstBoot = true;
+    private long lastRefreshTime = 0;
+
+    public Weather weather = Weather.getInstance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,105 +47,104 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void init() {
-        //标题栏质感化
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        //状态栏沉浸
         Objects.requireNonNull(getSupportActionBar()).setDisplayShowTitleEnabled(false);
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);//Activity全屏显示，Activity顶端布局部分会被状态遮住。
-        getWindow().setStatusBarColor(Color.TRANSPARENT);
-        //下拉刷新设置
-        initSwipeRefreshLayout();
+        getWindow().setStatusBarColor(getColor(R.color.purple));
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putInt("currentCountyCode",sharedPreferences.getInt("permanentCountyCode",0));
         editor.apply();
+        ((TextView)findViewById(R.id.location_textView)).setText(getString(R.string.app_name));
         updateWeatherDataFromServer();
-        getBingImage();
-        findViewById(R.id.scrollView).setVisibility(View.VISIBLE);
-        ((ReboundScrollView)findViewById(R.id.scrollView)).setEnableTopRebound(false);
+        ((ReboundScrollView)findViewById(R.id.scrollView)).setOnReboundEndListener(new MyOnReboundListener());
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         RelativeLayout mrlay = findViewById(R.id.now_relativeLayout);
         android.view.ViewGroup.LayoutParams layoutParams =mrlay.getLayoutParams();
         layoutParams.height = displayMetrics.heightPixels-BasicTool.getActionBarHeight(this)-BasicTool.getStatusBarHeight(this);
         mrlay.setLayoutParams(layoutParams);
+        ((TopWaveSurfaceView)findViewById(R.id.topWave)).startDrawingThread();
     }
-    private void initSwipeRefreshLayout(){
-        final SwipeRefreshLayout swipeRefreshLayout = findViewById(R.id.swipe_refresh);
-        swipeRefreshLayout.setProgressViewEndTarget(true, getResources().getDisplayMetrics().heightPixels /6);
-        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                if (InternetUtility.isNetworkConnected(MainActivity.instance)) {
-                    if ((findViewById(R.id.image)).getBackground() == null) { getBingImage();}
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                    int countyCode = prefs.getInt("currentCountyCode", 0);
-                    String language = prefs.getString("language", "en");
-                    if (countyCode != 0) {
-                        WeatherUtility.refreshWeather("CN" + countyCode, language, new ThreadFinishListener() {
-                            @Override
-                            public void onFinish() {
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        showWeatherData();
-                                        showTimeInterval();
-                                        swipeRefreshLayout.setRefreshing(false);
-                                        MyToast.toastMessage(getApplicationContext(), "Weather updated", Toast.LENGTH_SHORT,getColor(R.color.white));
-                                    }
-                                });
-                            }
-                        });
-                    } else {
-                        WeatherUtility.refreshWeather(language, new ThreadFinishListener() {
-                            @Override
-                            public void onFinish() {
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        int countyCode=Integer.parseInt(weather.weatherNow.basic.countyIdWithCn.substring(2));
-                                        String countyName = weather.weatherNow.basic.location;
-                                        SharedPreferences sharedPreferences = getSharedPreferences("added_city",MODE_PRIVATE);
-                                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                                        if (sharedPreferences.getString(countyName, "NotSavedCity").equals("NotSavedCity")) { editor.putInt(countyName, countyCode); }
-                                        editor.apply();
-                                        //保存当前城市编码
-                                        SharedPreferences.Editor editorForCurrent = PreferenceManager.getDefaultSharedPreferences(MainActivity.instance).edit();
-                                        editorForCurrent.putInt("currentCountyCode", countyCode);
-                                        editorForCurrent.putInt("permanentCountyCode",countyCode);
-                                        editorForCurrent.apply();
-                                        showWeatherData();
-                                        showTimeInterval();
-                                        swipeRefreshLayout.setRefreshing(false);
-                                        MyToast.toastMessage(getApplicationContext(), "Weather updated", Toast.LENGTH_SHORT,getColor(R.color.white));
-                                    }
-                                });
-                            }
-                        });
-                    }
-                    lastRefreshTime = System.currentTimeMillis();
-                } else {
-                    runOnUiThread(new Runnable() {
+
+    private  class  MyOnReboundListener implements ReboundScrollView.OnReboundEndListener{
+
+        @Override
+        public void onReboundTopComplete() {
+            if (InternetUtility.isNetworkConnected(MainActivity.instance)) {
+                SharedPreferences.Editor editor = MainActivity.instance.getSharedPreferences("weather_buffer",MODE_PRIVATE).edit();
+                editor.remove("weather_now");
+                editor.remove("weather_daily");
+                editor.remove("weather_hourly");
+                editor.apply();
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                int countyCode = prefs.getInt("currentCountyCode", 0);
+                String language = prefs.getString("language", "en");
+                if (countyCode != 0) {
+                    WeatherUtility.refreshWeather("CN" + countyCode, language, new ThreadFinishListener() {
                         @Override
-                        public void run() {
-                            swipeRefreshLayout.setRefreshing(false);
-                            MyToast.toastMessage(getApplicationContext(), "Internet not available", Toast.LENGTH_SHORT,getColor(R.color.white));
+                        public void onFinish() {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    showWeatherData();
+                                    showTimeInterval();
+                                    //  mSwipeRefreshLayout.setRefreshing(false);
+                                    MyToast.toastMessage(getApplicationContext(), "Weather updated", Toast.LENGTH_SHORT,getColor(R.color.gray_white_some));
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    WeatherUtility.refreshWeather(language, new ThreadFinishListener() {
+                        @Override
+                        public void onFinish() {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    int countyCode=Integer.parseInt(weather.weatherNow.basic.countyIdWithCn.substring(2));
+                                    String countyName = weather.weatherNow.basic.location;
+                                    SharedPreferences sharedPreferences = getSharedPreferences("added_city",MODE_PRIVATE);
+                                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                                    if (sharedPreferences.getString(countyName, "NotSavedCity").equals("NotSavedCity")) { editor.putInt(countyName, countyCode); }
+                                    editor.apply();
+                                    //保存当前城市编码
+                                    SharedPreferences.Editor editorForCurrent = PreferenceManager.getDefaultSharedPreferences(MainActivity.instance).edit();
+                                    editorForCurrent.putInt("currentCountyCode", countyCode);
+                                    editorForCurrent.putInt("permanentCountyCode",countyCode);
+                                    editorForCurrent.apply();
+                                    showWeatherData();
+                                    showTimeInterval();
+                                    //   mSwipeRefreshLayout.setRefreshing(false);
+                                    MyToast.toastMessage(getApplicationContext(), "Weather updated", Toast.LENGTH_SHORT,getColor(R.color.gray_white_some));
+                                }
+                            });
                         }
                     });
                 }
+                lastRefreshTime = System.currentTimeMillis();
+            } else {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ((TextView)findViewById(R.id.time_interval_textView)).setText("Internet not available");
+                        MyToast.toastMessage(getApplicationContext(), "Internet not available", Toast.LENGTH_SHORT,getColor(R.color.gray_white_some));
+                    }
+                });
             }
-        });
+        }
+
+        @Override
+        public void onReboundBottomComplete() {
+
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if(firstBoot){
-            firstBoot = false;
-        }else {
-            showTimeInterval();
-        }
+        showTimeInterval();
     }
 
     @Override
@@ -188,15 +177,12 @@ public class MainActivity extends AppCompatActivity {
                     ScrollView scrollView= findViewById(R.id.scrollView);
                     scrollView.fullScroll(View.FOCUS_UP);
                     if (InternetUtility.isNetworkConnected(MainActivity.instance)) {
-                        if ((findViewById(R.id.image)).getBackground() == null) {
-                            getBingImage();
-                        }
                         updateWeatherDataFromServer();
                         showTimeInterval();
                     } else {
                         scrollView.setVisibility(View.INVISIBLE);
                         ((TextView) findViewById(R.id.location_textView)).setText(R.string.app_name);
-                        ((TextView) findViewById(R.id.refresh_textView)).setText(R.string.net_not_available);
+                        ((TextView) findViewById(R.id.time_interval_textView)).setText(R.string.net_not_available);
                     }
                 }
             }
@@ -253,46 +239,9 @@ public class MainActivity extends AppCompatActivity {
         } else {
             findViewById(R.id.scrollView).setVisibility(View.INVISIBLE);
             ((TextView) findViewById(R.id.location_textView)).setText(R.string.app_name);
-            ((TextView) findViewById(R.id.refresh_textView)).setText(R.string.net_not_available);
+            ((TextView) findViewById(R.id.time_interval_textView)).setText(R.string.net_not_available);
             MyToast.toastMessage(getApplicationContext(), "Internet not available", Toast.LENGTH_SHORT,getColor(R.color.white));
         }
-    }
-
-    public void getBingImage() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    HttpURLConnection connection = (HttpURLConnection) new URL("http://guolin.tech/api/bing_pic").openConnection();
-                    InputStream inputStream = connection.getInputStream();
-                    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-                    final StringBuilder result = new StringBuilder();
-                    String line;
-                    while ((line = bufferedReader.readLine()) != null) {
-                        result.append(line);
-                    }
-                    URL myurl = new URL(result.toString());
-                    HttpURLConnection conn = (HttpURLConnection) myurl.openConnection();
-                    conn.setConnectTimeout(6000);
-                    conn.setDoInput(true);
-                    conn.setUseCaches(false);
-                    conn.connect();
-                    InputStream is = conn.getInputStream();
-                    final Bitmap bmp = BitmapFactory.decodeStream(is);
-                    is.close();
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            findViewById(R.id.image_relativeLayout).setVisibility(View.VISIBLE);
-                            Glide.with(getApplicationContext()).load(result.toString()).into((ImageView) findViewById(R.id.image));
-                        }
-                    });
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-            }
-        }).start();
     }
 
     void showWeatherData() {
@@ -332,17 +281,16 @@ public class MainActivity extends AppCompatActivity {
 
     void showTimeInterval() {
         if(InternetUtility.isNetworkConnected(this)) {
-
             long currentTime = System.currentTimeMillis();
             int refreshTimeInterval = (int) ((currentTime - lastRefreshTime) / (1000 * 60));
             if (refreshTimeInterval == 0) {
-                ((TextView) findViewById(R.id.refresh_textView)).setText(R.string.just_now);
+                ((TextView) findViewById(R.id.time_interval_textView)).setText(R.string.just_now);
             } else if (refreshTimeInterval < 60) {
-                ((TextView) findViewById(R.id.refresh_textView)).setText("updated " + refreshTimeInterval + " mins ago");
+                ((TextView) findViewById(R.id.time_interval_textView)).setText("updated " + refreshTimeInterval + " mins ago");
             } else if (refreshTimeInterval < 120) {
-                ((TextView) findViewById(R.id.refresh_textView)).setText(R.string.updated_1_hour_ago);
+                ((TextView) findViewById(R.id.time_interval_textView)).setText(R.string.updated_1_hour_ago);
             } else {
-                ((TextView) findViewById(R.id.refresh_textView)).setText("updated " + refreshTimeInterval / 60 + " hours ago");
+                ((TextView) findViewById(R.id.time_interval_textView)).setText("updated " + refreshTimeInterval / 60 + " hours ago");
             }
         }
     }

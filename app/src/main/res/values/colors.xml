@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#1899B9</color>
-    <color name="colorPrimaryDark">#1899B9</color>
+    <color name="colorPrimary">#8282cf</color>
+    <color name="colorPrimaryDark">#8282cf</color>
     <color name="colorAccent">#ffffff</color>
     <color name="transparent">#00000000</color>
-    <color name="bg">#1899B9</color>
+    <color name="bg">#8282cf</color>
     <color name="white">#ffffff</color>
     <color name="gray_white_much">#f2f2f2</color>
-    <color name="gray_white_some">#e2e2e2</color>
+    <color name="gray_white_some">#b4b4b4</color>
     <color name="white_trans">#9bffffff</color>
-    <color name="ripple">#48466d</color>
+    <color name="ripple">#e3e3e3</color>
+    <color name="purple">#8282cf</color>
+    <color name="testBackground">#b70e4c</color>
 </resources>

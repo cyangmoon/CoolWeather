@@ -20,7 +20,7 @@
             android:textStyle="normal"
             android:textSize="16sp" />
         <TextView
-            android:id="@+id/refresh_textView"
+            android:id="@+id/time_interval_textView"
             android:layout_width="wrap_content"
             android:textColor="@color/white_trans"
             android:layout_height="wrap_content"

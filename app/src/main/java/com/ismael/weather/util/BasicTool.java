@@ -37,12 +37,28 @@ public class BasicTool {
         return sbar;
     }
 
-    public static int getActionBarHeight(Context context){
-        @SuppressLint("Recycle") TypedArray actionbarSizeTypedArray = context.obtainStyledAttributes(new int[] {
+    public static int getActionBarHeight(Context context) {
+        @SuppressLint("Recycle") TypedArray actionbarSizeTypedArray = context.obtainStyledAttributes(new int[]{
                 android.R.attr.actionBarSize
         });
 
-        return (int)actionbarSizeTypedArray.getDimension(0, 0);
+        return (int) actionbarSizeTypedArray.getDimension(0, 0);
     }
 
+    public static int minInArry(int[] array) {
+        int minValue = array[0];
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] < minValue)
+                minValue = array[i];
+        }
+        return minValue;
+    }
+    public static int maxInArry(int[] array) {
+        int maxValue = array[0];
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] > maxValue)
+                maxValue = array[i];
+        }
+        return maxValue;
+    }
 }
